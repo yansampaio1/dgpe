@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Cursistas</title>
+    <script src="https://apis.google.com/js/api.js"></script> <!-- Carregar a API do Google -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        input {
+            padding: 10px;
+            width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .info-box {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Buscar Cursista</h2>
+        <input type="text" id="cpf" placeholder="Digite o CPF">
+        <button onclick="buscarCursista()">Buscar</button>
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // Substitua com a sua chave da API
+        const API_KEY = "AIzaSyCn29-OLN84ZZA271TceajTs9tgnE-0FaQ";
+        const SPREADSHEET_ID = "1VZVk52nLdCSFXNCJOehwptdHcrrObO7CSP7so-NulSA";
+        const RANGE = "Página1!A1:O31384"; // Defina a aba e o intervalo da sua planilha
+
+        // Função para carregar a API
+        function loadClient() {
+            gapi.client.setApiKey(API_KEY);
+            return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/sheets/v4/rest");
+        }
+
+        // Função para buscar os dados da planilha
+        async function buscarCursista() {
+            const cpf = document.getElementById("cpf").value.trim();
+            if (!cpf) {
+                alert("Por favor, insira um CPF.");
+                return;
+            }
+
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: RANGE,
+                });
+
+                const dados = response.result.values;
+                let encontrado = false;
+
+                for (let i = 1; i < dados.length; i++) { // Começa da linha 1, pois a linha 0 são os cabeçalhos
+                    if (dados[i][0] === cpf) {
+                        document.getElementById("resultado").innerHTML = `
+                            <div class="info-box">
+                                <p><strong>Nome:</strong> ${dados[i][1]}</p>
+                                <p><strong>Orientador:</strong> ${dados[i][2]}</p>
+                                <p><strong>Curso:</strong> ${dados[i][3]}</p>
+                                <p><strong>Turma(s):</strong> ${dados[i][4]}</p>
+                                <p><strong>Introdução:</strong> ${dados[i][5]}</p>
+                                <p><strong>Mapeamento de Saberes I:</strong> ${dados[i][6]}</p>
+                                <p><strong>Estudo do Caso:</strong> ${dados[i][7]}</p>
+                                <p><strong>Conteúdo:</strong> ${dados[i][8]}</p>
+                                <p><strong>Atividade Avaliativa:</strong> ${dados[i][9]}</p>
+                                <p><strong>Mapeamento de Saberes II:</strong> ${dados[i][10]}</p>
+                                <p><strong>Atividades Avaliativas:</strong> ${dados[i][11]}</p>
+                            </div>
+                        `;
+                        encontrado = true;
+                        break;
+                    }
+                }
+
+                if (!encontrado) {
+                    document.getElementById("resultado").innerHTML = "<p style='color: red;'>CPF não encontrado.</p>";
+                }
+            } catch (erro) {
+                console.error("Erro ao buscar dados", erro);
+                document.getElementById("resultado").innerHTML = "<p style='color: red;'>Erro ao buscar dados.</p>";
+            }
+        }
+
+        // Carregar a API do Google Sheets quando a página for carregada
+        gapi.load("client", loadClient);
+    </script>
+</body>
+</html>
